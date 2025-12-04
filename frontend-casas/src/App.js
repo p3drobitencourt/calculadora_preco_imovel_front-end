@@ -7,16 +7,16 @@ function App() {
   const [preco, setPreco] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
-  // MUDANÇA AQUI: Usamos um caminho relativo. 
-  // A Vercel vai redirecionar isso para o Azure nos bastidores.
+  // URL DO AZURE DIRETA (Sem proxy, o jeito clássico)
+  const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/prever';
+
   const fazerPrevisao = async (e) => {
     e.preventDefault();
     setCarregando(true);
     setPreco(null);
 
     try {
-      // Note que removemos o https://...azure... e deixamos apenas /api/prever
-      const resposta = await fetch('/api/prever', {
+      const resposta = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ function App() {
       });
 
       if (!resposta.ok) {
-        throw new Error('Falha na comunicação com a API');
+        throw new Error('Erro na comunicação com a API');
       }
 
       const dados = await resposta.json();
@@ -41,8 +41,8 @@ function App() {
       setPreco(valorFormatado);
 
     } catch (erro) {
-      console.error("Erro ao consultar o oráculo:", erro);
-      alert("O Oráculo falhou. Tente novamente mais tarde.");
+      console.error("Erro:", erro);
+      alert("Erro ao conectar com o Oráculo. Verifique se a API está online!");
     }
     setCarregando(false);
   };
@@ -77,7 +77,7 @@ function App() {
           </div>
 
           <button type="submit" disabled={carregando}>
-            {carregando ? 'Consultando os Astros...' : 'Calcular Valor'}
+            {carregando ? 'Consultando...' : 'Calcular Valor'}
           </button>
         </form>
 
