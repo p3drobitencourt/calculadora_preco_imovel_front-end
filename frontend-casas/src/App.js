@@ -16,7 +16,7 @@ function App() {
   const [carregando, setCarregando] = useState(false);
 
   // URL da API no Azure
-  const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/predict';
+  const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/prever';
 
   // --- LISTAS EXTRAÍDAS DO SEU JSON (modelo_columns.json) ---
   const cidades = [
