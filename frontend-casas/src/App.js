@@ -110,7 +110,7 @@ function App() {
   return (
     <div className="App">
       <div className="container">
-        <h1>Oráculo Imobiliário</h1>
+        <h1>🏘️ Oráculo Imobiliário</h1>
         <p className="subtitle">Previsão Imobiliária com Inteligência Artificial</p>
 
         <form onSubmit={fazerPrevisao}>
