@@ -2,21 +2,23 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  // Estados para os dados
+  // --- Estados do Formulário ---
   const [area, setArea] = useState('');
   const [quartos, setQuartos] = useState('');
   const [banheiros, setBanheiros] = useState('');
   const [vagas, setVagas] = useState('');
-  const [cidade, setCidade] = useState('São Paulo'); // Valor padrão para não ir vazio
-  const [tipo, setTipo] = useState('apartamento');   // Valor padrão
+  
+  // Valores padrão para os selects (evita erro de enviar vazio)
+  const [cidade, setCidade] = useState('São Paulo'); 
+  const [tipo, setTipo] = useState('apartamento');   
   
   const [resultado, setResultado] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
-  // URL DA API
+  // URL da API no Azure
   const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/predict';
 
-  // Lista exata de cidades extraída do seu modelo_metadata.json
+  // --- LISTAS EXTRAÍDAS DO SEU JSON (modelo_columns.json) ---
   const cidades = [
     "Araraquara", "Armação dos Búzios", "Atibaia", "Barueri", "Bauru", "Belo Horizonte", "Bertioga", "Betim", 
     "Bragança Paulista", "Brasília", "Cabo Frio", "Camaçari", "Campinas", "Canoas", "Caraguatatuba", "Carapicuíba", 
@@ -32,6 +34,7 @@ function App() {
     "São Sebastião", "Taubaté", "Teresópolis", "Tremembé", "Uberaba", "Uberlândia", "Valinhos", "Viamão", "Vinhedo"
   ];
 
+  // Tipos mapeados (Apartamento é o padrão/base, pois não está na lista one-hot)
   const tipos = [
     { label: "Apartamento", value: "apartamento" },
     { label: "Casa", value: "casas" },
@@ -43,14 +46,14 @@ function App() {
     setCarregando(true);
     setResultado(null);
 
-    // Mágica acontecendo: Mapeando os nomes do front para o que o Python espera
+    // Monta o pacote de dados exato que o Python espera
     const payload = {
       area: Number(area),
       quartos: Number(quartos),
-      bathrooms: Number(banheiros),      // Python espera 'bathrooms'
-      parkingSpaces: Number(vagas),      // Python espera 'parkingSpaces'
-      city: cidade,                      // Envia o NOME (String), ex: "São Paulo"
-      imvl_type: tipo                    // Envia o TIPO (String), ex: "casas"
+      bathrooms: Number(banheiros), // Python usa 'bathrooms'
+      parkingSpaces: Number(vagas), // Python usa 'parkingSpaces'
+      city: cidade,                 // Envia o nome da cidade (string)
+      imvl_type: tipo               // Envia o tipo (string)
     };
 
     try {
@@ -65,79 +68,118 @@ function App() {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(dados.error || JSON.stringify(dados));
+        throw new Error(dados.error || 'Erro desconhecido na API');
       }
 
-      // O Python já devolve formatado como "R$ X.XXX,XX"
       setResultado(dados.preco_formatado);
 
     } catch (erro) {
       console.error("Erro:", erro);
-      alert(`Falha no Oráculo: ${erro.message}`);
+      alert(`Erro no Oráculo: ${erro.message}`);
     }
     setCarregando(false);
+  };
+
+  // Estilo para os Selects ficarem bonitos igual aos Inputs
+  const selectStyle = {
+    width: '100%',
+    padding: '12px',
+    backgroundColor: '#334155',
+    border: '1px solid #475569',
+    borderRadius: '8px',
+    color: 'white',
+    fontSize: '1rem',
+    boxSizing: 'border-box',
+    cursor: 'pointer'
   };
 
   return (
     <div className="App">
       <div className="container">
         <h1>🏠 Oráculo Imobiliário</h1>
-        <p className="subtitle">Previsão baseada em Inteligência Artificial.</p>
+        <p className="subtitle">Previsão Imobiliária com Inteligência Artificial</p>
 
         <form onSubmit={fazerPrevisao}>
           
+          {/* SELEÇÃO DE CIDADE */}
           <div className="form-group">
             <label>Cidade</label>
             <select 
               value={cidade} 
-              onChange={e => setCidade(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#334155', color: 'white', border: '1px solid #475569' }}
+              onChange={(e) => setCidade(e.target.value)}
+              style={selectStyle}
             >
-              {cidades.map(c => (
+              {cidades.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
 
+          {/* SELEÇÃO DE TIPO */}
           <div className="form-group">
-            <label>Tipo do Imóvel</label>
+            <label>Tipo de Imóvel</label>
             <select 
               value={tipo} 
-              onChange={e => setTipo(e.target.value)}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', background: '#334155', color: 'white', border: '1px solid #475569' }}
+              onChange={(e) => setTipo(e.target.value)}
+              style={selectStyle}
             >
-              {tipos.map(t => (
+              {tipos.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
           </div>
 
+          {/* CAMPOS NUMÉRICOS (Lado a Lado) */}
           <div className="grid-2">
             <div className="form-group">
               <label>Área (m²)</label>
-              <input type="number" value={area} onChange={e => setArea(e.target.value)} required placeholder="120" />
+              <input 
+                type="number" 
+                value={area} 
+                onChange={(e) => setArea(e.target.value)} 
+                required 
+                placeholder="Ex: 80" 
+              />
             </div>
 
             <div className="form-group">
               <label>Quartos</label>
-              <input type="number" value={quartos} onChange={e => setQuartos(e.target.value)} required placeholder="3" />
+              <input 
+                type="number" 
+                value={quartos} 
+                onChange={(e) => setQuartos(e.target.value)} 
+                required 
+                placeholder="Ex: 2" 
+              />
             </div>
           </div>
 
           <div className="grid-2">
             <div className="form-group">
               <label>Banheiros</label>
-              <input type="number" value={banheiros} onChange={e => setBanheiros(e.target.value)} required placeholder="2" />
+              <input 
+                type="number" 
+                value={banheiros} 
+                onChange={(e) => setBanheiros(e.target.value)} 
+                required 
+                placeholder="Ex: 1" 
+              />
             </div>
 
             <div className="form-group">
               <label>Vagas</label>
-              <input type="number" value={vagas} onChange={e => setVagas(e.target.value)} required placeholder="1" />
+              <input 
+                type="number" 
+                value={vagas} 
+                onChange={(e) => setVagas(e.target.value)} 
+                required 
+                placeholder="Ex: 1" 
+              />
             </div>
           </div>
 
           <button type="submit" disabled={carregando}>
-            {carregando ? 'Calculando...' : 'Calcular Valor'}
+            {carregando ? 'Consultando...' : 'Calcular Valor'}
           </button>
         </form>
 
