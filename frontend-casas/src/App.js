@@ -2,88 +2,93 @@ import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  // Estados para guardar o que o humano digita
   const [area, setArea] = useState('');
   const [quartos, setQuartos] = useState('');
   const [preco, setPreco] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
-  // Função que chama o Oráculo (API Flask)
+  // URL fornecida pelo Luis (adicionei https://)
+  const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/prever';
+
   const fazerPrevisao = async (e) => {
-    e.preventDefault(); // Não recarregar a página
+    e.preventDefault();
     setCarregando(true);
+    setPreco(null); // Limpa resultado anterior
 
     try {
-      const resposta = await fetch('http://127.0.0.1:5000/prever', {
+      const resposta = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          area: area,
-          quartos: quartos
+          area: Number(area),
+          quartos: Number(quartos)
         }),
       });
 
+      if (!resposta.ok) {
+        throw new Error('Falha na comunicação com a API');
+      }
+
       const dados = await resposta.json();
-      setPreco(dados.preco_previsto);
+      
+      // Formata para moeda Brasileira
+      const valorFormatado = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(dados.preco_previsto);
+
+      setPreco(valorFormatado);
+
     } catch (erro) {
       console.error("Erro ao consultar o oráculo:", erro);
-      alert("O Oráculo não respondeu. Verifique se o arquivo 'app.py' está rodando!");
+      alert("O Oráculo está em silêncio (Erro na API). Verifique se o backend permite conexões externas (CORS).");
     }
     setCarregando(false);
   };
 
   return (
-    <div className="App" style={{ padding: '50px', fontFamily: 'Arial' }}>
-      <h1>🏠 Oráculo Imobiliário</h1>
-      <p>Digite os dados da casa para prever o valor divino.</p>
+    <div className="App">
+      <div className="container">
+        <h1>🏠 Oráculo Imobiliário</h1>
+        <p className="subtitle">Insira os dados para a previsão divina.</p>
 
-      <form onSubmit={fazerPrevisao} style={{ maxWidth: '400px', margin: '0 auto' }}>
-        
-        <div style={{ marginBottom: '20px' }}>
-          <label>Área (m²):</label><br/>
-          <input 
-            type="number" 
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            required
-            style={{ padding: '10px', width: '100%' }}
-          />
-        </div>
+        <form onSubmit={fazerPrevisao}>
+          <div className="form-group">
+            <label>Área do Imóvel (m²)</label>
+            <input 
+              type="number" 
+              placeholder="Ex: 120"
+              value={area}
+              onChange={(e) => setArea(e.target.value)}
+              required
+            />
+          </div>
 
-        <div style={{ marginBottom: '20px' }}>
-          <label>Quantidade de Quartos:</label><br/>
-          <input 
-            type="number" 
-            value={quartos}
-            onChange={(e) => setQuartos(e.target.value)}
-            required
-            style={{ padding: '10px', width: '100%' }}
-          />
-        </div>
+          <div className="form-group">
+            <label>Número de Quartos</label>
+            <input 
+              type="number" 
+              placeholder="Ex: 3"
+              value={quartos}
+              onChange={(e) => setQuartos(e.target.value)}
+              required
+            />
+          </div>
 
-        <button 
-          type="submit" 
-          style={{ 
-            padding: '15px 30px', 
-            backgroundColor: '#282c34', 
-            color: 'white', 
-            border: 'none', 
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          {carregando ? 'Consultando os Astros...' : 'Prever Preço'}
-        </button>
-      </form>
+          <button type="submit" disabled={carregando}>
+            {carregando ? 'Consultando os Astros...' : 'Calcular Valor'}
+          </button>
+        </form>
 
-      {preco && (
-        <div style={{ marginTop: '40px', padding: '20px', border: '2px solid #4caf50', borderRadius: '10px' }}>
-          <h2>💰 Valor Estimado:</h2>
-          <h1 style={{ color: '#4caf50' }}>R$ {preco}</h1>
-        </div>
-      )}
+        {preco && (
+          <div className="result-card">
+            <h2>💰 Estimativa Divina:</h2>
+            <p className="price">{preco}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
