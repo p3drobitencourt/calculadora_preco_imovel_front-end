@@ -18,9 +18,11 @@ function App() {
   // URL da API no Azure
   const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/prever';
 
+  //teste local
+  //const API_URL = 'http://127.0.0.1:5000/prever';
   // --- LISTAS EXTRAÍDAS DO SEU JSON (modelo_columns.json) ---
   const cidades = [
-    "Araraquara", "Armação dos Búzios", "Atibaia", "Barueri", "Bauru", "Belo Horizonte", "Bertioga", "Betim", 
+    "Americana", "Araraquara", "Armação dos Búzios", "Atibaia", "Barueri", "Bauru", "Belo Horizonte", "Bertioga", "Betim", 
     "Bragança Paulista", "Brasília", "Cabo Frio", "Camaçari", "Campinas", "Canoas", "Caraguatatuba", "Carapicuíba", 
     "Caçapava", "Contagem", "Cotia", "Curitiba", "Diadema", "Feira de Santana", "Florianópolis", "Fortaleza", 
     "Goiânia", "Gravataí", "Guarujá", "Guarulhos", "Hortolândia", "Indaiatuba", "Itapetininga", "Itatiba", "Itu", 
@@ -42,43 +44,55 @@ function App() {
   ];
 
   const fazerPrevisao = async (e) => {
-    e.preventDefault();
-    setCarregando(true);
-    setResultado(null);
+  e.preventDefault();
+  setCarregando(true);
+  setResultado(null);
 
-    // Monta o pacote de dados exato que o Python espera
-    const payload = {
-      area: Number(area),
-      quartos: Number(quartos),
-      bathrooms: Number(banheiros), // Python usa 'bathrooms'
-      parkingSpaces: Number(vagas), // Python usa 'parkingSpaces'
-      city: cidade,                 // Envia o nome da cidade (string)
-      imvl_type: tipo               // Envia o tipo (string)
-    };
-
-    try {
-      const resposta = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const dados = await resposta.json();
-
-      if (!resposta.ok) {
-        throw new Error(dados.error || 'Erro desconhecido na API');
-      }
-
-      setResultado(dados.preco_formatado);
-
-    } catch (erro) {
-      console.error("Erro:", erro);
-      alert(`Erro no Oráculo: ${erro.message}`);
-    }
-    setCarregando(false);
+  const payload = {
+    area: Number(area),
+    quartos: Number(quartos),
+    bathrooms: Number(banheiros),
+    parkingSpaces: Number(vagas),
+    city: cidade,
+    imvl_type: tipo
   };
+
+  console.log("Enviando payload:", payload);
+
+  try {
+    const resposta = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    console.log("Status:", resposta.status);
+
+    const dados = await resposta.json();
+    console.log("RESPOSTA COMPLETA DA API:", JSON.stringify(dados, null, 2));
+
+    if (!resposta.ok) {
+      throw new Error(dados.error || `Erro ${resposta.status}`);
+    }
+
+    // Tenta diferentes formas de acessar o preço
+    const preco = dados.preco_previsto;
+
+    if (preco) {
+      setResultado(preco);
+      console.log("Resultado atualizado para:", preco);
+    } else {
+      console.warn("Nenhum campo de preço encontrado na resposta!");
+    }
+
+  } catch (erro) {
+    console.error("Erro:", erro);
+    alert(`Erro: ${erro.message}`);
+  }
+  setCarregando(false);
+};
 
   // Estilo para os Selects ficarem bonitos igual aos Inputs
   const selectStyle = {
@@ -96,7 +110,7 @@ function App() {
   return (
     <div className="App">
       <div className="container">
-        <h1>🏠 Oráculo Imobiliário</h1>
+        <h1>Oráculo Imobiliário</h1>
         <p className="subtitle">Previsão Imobiliária com Inteligência Artificial</p>
 
         <form onSubmit={fazerPrevisao}>
@@ -143,7 +157,7 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Quartos</label>
+              <label>Número de Quartos</label>
               <input 
                 type="number" 
                 value={quartos} 
@@ -156,7 +170,7 @@ function App() {
 
           <div className="grid-2">
             <div className="form-group">
-              <label>Banheiros</label>
+              <label>Número de Banheiros</label>
               <input 
                 type="number" 
                 value={banheiros} 
@@ -167,7 +181,7 @@ function App() {
             </div>
 
             <div className="form-group">
-              <label>Vagas</label>
+              <label>Vagas para automóveis</label>
               <input 
                 type="number" 
                 value={vagas} 
@@ -185,8 +199,13 @@ function App() {
 
         {resultado && (
           <div className="result-card">
-            <h2>💰 Valor Estimado:</h2>
-            <p className="price">{resultado}</p>
+            <h2>💰 Valor do Aluguel Estimado:</h2>
+            <p className="price">
+              {new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              }).format(resultado * 1000)}
+            </p>
           </div>
         )}
       </div>
