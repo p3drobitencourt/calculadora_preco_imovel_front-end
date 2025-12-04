@@ -110,7 +110,14 @@ function App() {
   return (
     <div className="App">
       <div className="container">
-        <h1>🏘️ Oráculo Imobiliário</h1>
+        <h1>
+          <span style={{ 
+            color: '#ed4bb7ff', 
+            opacity: 1,
+            WebKitTextFillColor: 'unset !important',
+            textShadow: '0 0 10px rgba(219, 15, 255, 0.5)'
+          }}>🏘️</span> Oráculo Imobiliário
+        </h1>
         <p className="subtitle">Previsão Imobiliária com Inteligência Artificial</p>
 
         <form onSubmit={fazerPrevisao}>
