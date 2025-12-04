@@ -7,16 +7,16 @@ function App() {
   const [preco, setPreco] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
-  // URL fornecida pelo Luis (adicionei https://)
-  const API_URL = 'https://api-calc-imoveis-a7fbhqg3h4hghmhr.eastus2-01.azurewebsites.net/prever';
-
+  // MUDANÇA AQUI: Usamos um caminho relativo. 
+  // A Vercel vai redirecionar isso para o Azure nos bastidores.
   const fazerPrevisao = async (e) => {
     e.preventDefault();
     setCarregando(true);
-    setPreco(null); // Limpa resultado anterior
+    setPreco(null);
 
     try {
-      const resposta = await fetch(API_URL, {
+      // Note que removemos o https://...azure... e deixamos apenas /api/prever
+      const resposta = await fetch('/api/prever', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,7 +33,6 @@ function App() {
 
       const dados = await resposta.json();
       
-      // Formata para moeda Brasileira
       const valorFormatado = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -43,7 +42,7 @@ function App() {
 
     } catch (erro) {
       console.error("Erro ao consultar o oráculo:", erro);
-      alert("O Oráculo está em silêncio (Erro na API). Verifique se o backend permite conexões externas (CORS).");
+      alert("O Oráculo falhou. Tente novamente mais tarde.");
     }
     setCarregando(false);
   };
